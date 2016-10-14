@@ -3,7 +3,6 @@ import { Component, OnInit } from '@angular/core';
 //File dependent on jquery ($)
 
 @Component({
-    moduleId: module.id,
     selector: 'backtotop',
     template: `<div [style.opacity]="opacity" 
                     (mouseenter)="opacity = 1"

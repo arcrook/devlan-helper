@@ -1,7 +1,5 @@
 import {Component, ElementRef, OnInit, Input, Output, EventEmitter} from '@angular/core';
 
-import { FormControl } from '@angular/forms';
-
 //Talk to jquery
 declare var $: any;
 
@@ -18,17 +16,9 @@ declare var $: any;
     `
 })
 export class SingleDatePickerComponent implements OnInit {
-    options = {
-        singleDatePicker: true,
-        showDropdowns: true,
-        locale: {
-                format: 'DD-MMM-YYYY',
-                startDate: null,
-                endDate: null
-                }
-    };
+    options : any = {}
    
-    @Input() startDate  : Date;
+    @Input() startDate : Date;
     @Input() disabled : boolean;
     @Output() valueChanged: EventEmitter<any> = new EventEmitter();
     @Output() selected: EventEmitter<SingleDate> = new EventEmitter<SingleDate>();  
@@ -37,8 +27,17 @@ export class SingleDatePickerComponent implements OnInit {
 
     ngOnInit() {
 
-        this.options.locale.startDate = this.startDate;
-        this.options.locale.endDate = this.startDate;
+        this.options = {
+        singleDatePicker: true,
+        showDropdowns: true,
+        locale: {
+                format: 'DD-MMM-YYYY',
+                startDate: this.startDate,
+                endDate: this.startDate
+                }
+          };
+
+
         //via jquery select the input and intitialise the datepicker
         $(this.elementRef.nativeElement).children().children('input[name="datepicker"]')
             .daterangepicker(this.options, null).on('apply.daterangepicker', this.dateCallbackApply.bind(this));

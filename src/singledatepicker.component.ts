@@ -1,5 +1,7 @@
 import {Component, ElementRef, OnInit, Input, Output, EventEmitter} from '@angular/core';
 
+import { FormControl } from '@angular/forms';
+
 //Talk to jquery
 declare var $: any;
 
@@ -10,34 +12,48 @@ declare var $: any;
     <input name="datepicker" class="form-control pull-right"
                         (valueChanged)="onValueChanged($event)"
                         value="{{formatDate()}}"
-                        [disabled]="disabled"/>
+                        [disabled]="isDisabled()" 
+                        readonly="readonly" [style.background]="background"
+                        style="cursor: pointer;"/>
      <div class="input-group-addon"><i class="fa fa-calendar" aria-hidden="true"></i></div>
                         </div>
     `
 })
 export class SingleDatePickerComponent implements OnInit {
-    options : any = {}
-   
-    @Input() startDate : Date;
-    @Input() disabled : boolean;
-    @Output() valueChanged: EventEmitter<any> = new EventEmitter();
-    @Output() selected: EventEmitter<SingleDate> = new EventEmitter<SingleDate>();  
-
-    constructor(private elementRef: ElementRef) { }
-
-    ngOnInit() {
-
-        this.options = {
+    options = {
         singleDatePicker: true,
         showDropdowns: true,
         locale: {
                 format: 'DD-MMM-YYYY',
-                startDate: this.startDate,
-                endDate: this.startDate
+                startDate: null,
+                endDate: null
                 }
-          };
+    };
+   
+    @Input() startDate  : Date;
+    @Input() disabled : boolean;
+    @Output() valueChanged: EventEmitter<any> = new EventEmitter();
+    @Output() selected: EventEmitter<SingleDate> = new EventEmitter<SingleDate>();  
 
+    background : string = "white";
 
+    constructor(private elementRef: ElementRef) { }
+
+    isDisabled() : boolean {
+        if(this.disabled) {
+            this.background = "";
+        }
+        else{
+             this.background = "white";
+        }
+
+        return this.disabled;
+    }
+
+    ngOnInit() {
+
+        this.options.locale.startDate = this.startDate;
+        this.options.locale.endDate = this.startDate;
         //via jquery select the input and intitialise the datepicker
         $(this.elementRef.nativeElement).children().children('input[name="datepicker"]')
             .daterangepicker(this.options, null).on('apply.daterangepicker', this.dateCallbackApply.bind(this));

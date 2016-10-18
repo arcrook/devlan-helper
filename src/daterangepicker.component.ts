@@ -6,22 +6,29 @@ declare var $: any;
 @Component({
     selector: 'DateRangePickerComponent',
     template: `  
-    <input type="text" name="datepicker" class="form-control pull-right thing" placeholder="Search" 
+         <div class="input-group input-group-sm" style="width: 250px;">
+                    <input readonly="readonly" type="text" name="datepicker" class="form-control pull-right thing" placeholder="Search" 
                         (valueChanged)="onValueChanged($event)"
                         value="{{formatDate(startDate)}} - {{formatDate(endDate)}}"
                         [disabled]="disabled"/>
+                   <div class="input-group-btn">
+                            <button type="submit" class="btn btn-default" (click)="searchRange()"><i class="fa fa-search"></i></button>
+                        </div>
+        </div>
     `,
-    styles: ['.thing {padding: 5px 10px 5px 10px!important;border-top-left-radius:3px!important;border-bottom-left-radius:3px!important;height:30px!important;font-size:12px!important;}']
+    styles: ['.thing {padding: 5px 10px 5px 10px!important;border-top-left-radius:3px!important;border-bottom-left-radius:3px!important;height:30px!important;font-size:12px!important; background:white!important; cursor: pointer;}']
 
 })
 export class DateRangePickerComponent implements OnInit {
     options : any;
 
+    dateRangeInputHtml : any;
+
     @Input() startDate: Date;
     @Input() endDate: Date;
     @Input() disabled: boolean;
     @Output() valueChanged: EventEmitter<any> = new EventEmitter();
-    @Output() selected: EventEmitter<DateRange> = new EventEmitter<DateRange>();
+    @Output() search: EventEmitter<DateRange> = new EventEmitter<DateRange>();
 
     constructor(private elementRef: ElementRef) { }
 
@@ -42,9 +49,12 @@ export class DateRangePickerComponent implements OnInit {
             'endDate': this.formatDate(this.endDate)
         };
 
+        this.dateRangeInputHtml = $(this.elementRef.nativeElement).children().children('input[name="datepicker"]');
+
         //via jquery select the input and intitialise the datepicker
-        $(this.elementRef.nativeElement).children('input[name="datepicker"]')
-            .daterangepicker(this.options, this.dateCallback.bind(this));
+        //datepicker will maintain daterange untill search clicked, 
+        //then it will pas range back to caller
+        this.dateRangeInputHtml.daterangepicker(this.options, null);
 
     }
 
@@ -66,29 +76,28 @@ export class DateRangePickerComponent implements OnInit {
 
 
     onInputChange(event: any) {
-        $(this.elementRef.nativeElement).children('input[name="datepicker"]').data('daterangepicker').setStartDate(this.formatDate(this.startDate));
-        $(this.elementRef.nativeElement).children('input[name="datepicker"]').data('daterangepicker').setEndDate(this.formatDate(this.endDate));
+       this.dateRangeInputHtml.data('daterangepicker').setStartDate(this.formatDate(this.startDate));
+       this.dateRangeInputHtml.data('daterangepicker').setEndDate(this.formatDate(this.endDate));
     }
 
 
-    dateCallback(start: any, end: any, label: any) {
-        // by design the picker will set the time of the date to 23:00 e.g. 2016-08-09T23:00:00.000Z
-        // need to set this to 00:00
-        let date: Date = new Date(start);
-        date.setHours(0, 0, 0, 0);
+    searchRange()
+    {
+        // by design the picker will set the time of the date to 00:00 UTC time, hovever dateTime used in logic 
+        // and in JSON serialisation is the LOCAL time, there for need to adjust time so that LOCAL time is 00:00  
+        this.options;
+        var drp = this.dateRangeInputHtml.data('daterangepicker');
 
-        let date1: Date = new Date(end);
-        date1.setHours(0, 0, 0, 0);
+        let startDate : Date = new Date(drp.startDate._d.toUTCString());
+        //var minDiffToUtc = startDate.getTimezoneOffset(); 
+        //startDate = new Date(startDate.getTime() -(minDiffToUtc*60000));
 
-        let message = new DateRange(date, date1);
-        this.selected.emit(message);
-    }
+        let endDate : Date = new Date(drp.endDate._d.toUTCString());
+        //var minDiffToUtc = endDate.getTimezoneOffset(); 
+        //endDate = new Date(endDate.getTime() -(minDiffToUtc*60000));
 
-    newGuid(): string {
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-            return v.toString(16);
-        });
+        let message = new DateRange(startDate, endDate);
+        this.search.emit(message);
     }
 }
 
